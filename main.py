@@ -1,43 +1,24 @@
 import requests
 import pandas as pd
+import json
 
 def fetch_mlb_standings():
     url = "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2024&standingsTypes=regularSeason"
     r = requests.get(url)
     data = r.json()
 
-    teams = []
-
-    for record in data['records']:
-        for team_info in record['teamRecords']:
-            team_data = team_info['team']
-            division_name = team_data.get('division', {}).get('name', 'Unknown Division')
-            league_name = team_data.get('league', {}).get('name', 'Unknown League')
-
-            team = {
-                'Team': team_data['name'],
-                'League': league_name,
-                'Division': division_name,
-                'Wins': team_info['wins'],
-                'Losses': team_info['losses'],
-                'GamesBack': team_info.get('gamesBack', '0'),
-                'WinPct': float(team_info['winningPercentage']),
-                'Remaining Games': 162 - (team_info['wins'] + team_info['losses'])
-            }
-            teams.append(team)
-
-    df = pd.DataFrame(teams)
-    return df
+    # Print 1 team record to inspect structure
+    sample = data['records'][0]['teamRecords'][0]
+    print("🔍 Sample team record:\n")
+    print(json.dumps(sample, indent=2))
+    return pd.DataFrame()  # Just stop here for now
 
 def main():
     df = fetch_mlb_standings()
 
     if df.empty:
-        print("🚫 No data found.")
+        print("🚫 No data yet. Debug mode.")
         return
-
-    print("✅ Live MLB Standings via MLB API:")
-    print(df[['League', 'Division', 'Team', 'Wins', 'Losses', 'WinPct', 'Remaining Games']].head(12))
 
 if __name__ == "__main__":
     main()
