@@ -21,7 +21,7 @@ def fetch_mlb_standings():
 
     for idx, record in enumerate(data['records']):
         if idx >= len(division_order):
-            continue  # Defensive: skip if unexpected divisions returned
+            continue  # Defensive: skip if more divisions than expected
 
         league_name, division_name = division_order[idx]
 
@@ -38,7 +38,6 @@ def fetch_mlb_standings():
                 'WinPct': float(team_info['winningPercentage']),
             }
 
-            # Handle early season with <162 games played
             team['Remaining Games'] = 162 - (team['Wins'] + team['Losses'])
             team['Max_Wins'] = team['Wins'] + team['Remaining Games']
 
@@ -51,7 +50,7 @@ def get_playoff_picture(df):
     output = {}
 
     for league in ['American League', 'National League']:
-        league_df = df[df['League'] == league]
+        league_df = df[df['League'] == league].copy()  # Copy to avoid SettingWithCopyWarning
 
         # Get 1st place team in each division
         division_winners = (
@@ -67,7 +66,7 @@ def get_playoff_picture(df):
 
         # Elimination check
         win_cutoff = wildcards['Wins'].min() if not wildcards.empty else 0
-        league_df['Still_Alive'] = league_df['Max_Wins'] >= win_cutoff
+        league_df.loc[:, 'Still_Alive'] = league_df['Max_Wins'] >= win_cutoff
 
         output[league] = {
             'Division Winners': division_winners[['Team', 'Wins']],
