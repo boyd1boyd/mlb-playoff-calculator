@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 
 def fetch_mlb_standings():
-    url = "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2024&standingsTypes=regularSeason"
+    url = "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2025&standingsTypes=regularSeason"
     r = requests.get(url)
     data = r.json()
 
