@@ -1,36 +1,43 @@
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 
-# Sample data simulating current standings
-data = {
-    'Team': ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F', 'Team G'],
-    'Wins': [95, 92, 90, 88, 87, 85, 80],
-    'Losses': [60, 63, 65, 67, 68, 70, 75],
-    'Remaining Games': [7, 7, 7, 7, 7, 7, 7]
-}
+def fetch_espn_standings():
+    url = "https://www.espn.com/mlb/standings"
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
 
-df = pd.DataFrame(data)
-df['Max_Wins'] = df['Wins'] + df['Remaining Games']
+    # All tables (one per division)
+    tables = soup.find_all("table", class_="Table")
 
-# Sort by Wins
-df = df.sort_values(by='Wins', ascending=False).reset_index(drop=True)
+    all_dfs = []
+    division_names = ["AL East", "AL Central", "AL West", "NL East", "NL Central", "NL West"]
 
-# Top 3 teams
-top_3 = df.head(3)
+    for table, division in zip(tables, division_names):
+        df = pd.read_html(str(table))[0]
+        df["Division"] = division
+        all_dfs.append(df)
 
-# Wildcards (next best 2 teams)
-wildcards = df.iloc[3:5]
+    combined_df = pd.concat(all_dfs)
+    combined_df.reset_index(drop=True, inplace=True)
 
-# Playoff threshold: wildcard cutoff
-wildcard_cutoff = wildcards['Wins'].min()
+    # Standardize columns
+    combined_df.rename(columns={
+        "W": "Wins",
+        "L": "Losses",
+        "PCT": "WinPct",
+        "GB": "GamesBack"
+    }, inplace=True)
 
-# Determine playoff eligibility
-df['Still_Alive'] = df['Max_Wins'] >= wildcard_cutoff
+    # Calculate Remaining Games (assume 162-game season)
+    combined_df["Remaining Games"] = 162 - (combined_df["Wins"] + combined_df["Losses"])
+    
+    return combined_df
 
-print("🏆 Top 3 Teams:")
-print(top_3[['Team', 'Wins', 'Max_Wins']])
+def main():
+    standings = fetch_espn_standings()
+    print("✅ Scraped Live MLB Standings:")
+    print(standings.head())
 
-print("\n💥 Wildcard Contenders:")
-print(wildcards[['Team', 'Wins', 'Max_Wins']])
-
-print("\n📊 Full Table with Playoff Eligibility:")
-print(df[['Team', 'Wins', 'Max_Wins', 'Still_Alive']])
+if __name__ == "__main__":
+    main()
