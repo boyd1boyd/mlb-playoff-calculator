@@ -1,14 +1,16 @@
-# MLB Playoff Calculator
+# ⚾ MLB Playoff Calculator
 
-This project scrapes the latest MLB standings and calculates which teams are in the top 3 and which teams are potential wildcards based on their remaining games.
+This project calculates the top 3 teams and wildcard contenders in the MLB standings and determines which teams are still mathematically eligible to make the playoffs.
 
-## Project Structure
-- **main.py:** The main Python script that performs data fetching, processing, and calculations.
-- **requirements.txt:** Contains the list of required Python libraries.
-- **README.md:** This file, which explains the project.
+## 🔧 Features
 
-## Setup Instructions
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/mlb-playoff-calculator.git
-   cd mlb-playoff-calculator
+- Ranks teams by wins and max possible wins.
+- Identifies top 3 teams.
+- Selects 2 wildcard teams.
+- Checks playoff eligibility.
+
+## ▶️ How to Run Locally
+
+```bash
+pip install -r requirements.txt
+python main.py
