@@ -9,10 +9,12 @@ def fetch_mlb_standings():
     teams = []
 
     for record in data['records']:
+        # Pull league and division from the record (NOT the team)
+        league_name = record['league']['name']
+        division_name = record['division']['name']
+
         for team_info in record['teamRecords']:
             team_data = team_info['team']
-            division_name = team_data.get('division', {}).get('name', 'Unknown Division')
-            league_name = team_data.get('league', {}).get('name', 'Unknown League')
 
             team = {
                 'Team': team_data['name'],
