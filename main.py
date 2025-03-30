@@ -4,39 +4,36 @@ def fetch_espn_standings():
     url = "https://www.espn.com/mlb/standings"
     
     try:
-        # Read all HTML tables on the page
         dfs = pd.read_html(url)
         print(f"✅ Loaded {len(dfs)} tables from ESPN")
 
-        # ESPN returns division tables in this order
-        division_names = ["AL East", "AL Central", "AL West", "NL East", "NL Central", "NL West"]
-        
-        # Use only the first 6 tables (one per division)
+        division_names = ["AL East", "AL Central", "NL East", "NL Central"]
         all_dfs = []
 
-        for df, division in zip(dfs[:6], division_names):
+        for df, division in zip(dfs[:4], division_names):
             df["Division"] = division
             all_dfs.append(df)
 
-        combined_df = pd.concat(all_dfs)
-        combined_df.reset_index(drop=True, inplace=True)
+        combined_df = pd.concat(all_dfs, ignore_index=True)
 
-        # Rename columns for clarity
-        combined_df.rename(columns={
-            "W": "Wins",
-            "L": "Losses",
-            "PCT": "WinPct",
-            "GB": "GamesBack"
-        }, inplace=True)
+        # Rename ESPN-style columns to standard names
+        if "W" in combined_df.columns and "L" in combined_df.columns:
+            combined_df.rename(columns={
+                "W": "Wins",
+                "L": "Losses",
+                "PCT": "WinPct",
+                "GB": "GamesBack"
+            }, inplace=True)
+        else:
+            print("❌ Expected columns 'W' and 'L' not found.")
+            return pd.DataFrame()
 
-        # Calculate Remaining Games (assume 162-game season)
         combined_df["Remaining Games"] = 162 - (combined_df["Wins"] + combined_df["Losses"])
-
         return combined_df
-    
+
     except Exception as e:
         print("❌ Error fetching standings:", e)
-        return pd.DataFrame()  # Return empty if there's an error
+        return pd.DataFrame()
 
 def main():
     standings = fetch_espn_standings()
