@@ -1,49 +1,36 @@
+import requests
 import pandas as pd
 
-def fetch_espn_standings():
-    url = "https://www.espn.com/mlb/standings"
-    
-    try:
-        dfs = pd.read_html(url)
-        print(f"✅ Loaded {len(dfs)} tables from ESPN")
+def fetch_mlb_standings():
+    url = "https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=2024&standingsTypes=regularSeason"
+    r = requests.get(url)
+    data = r.json()
 
-        division_names = ["AL East", "AL Central", "NL East", "NL Central"]
-        all_dfs = []
+    teams = []
 
-        for df, division in zip(dfs[:4], division_names):
-            df["Division"] = division
-            all_dfs.append(df)
+    for record in data['records']:
+        division = record['division']['name']
+        league = record['league']['name']
+        for team_info in record['teamRecords']:
+            team = {
+                'Team': team_info['team']['name'],
+                'League': league,
+                'Division': division,
+                'Wins': team_info['wins'],
+                'Losses': team_info['losses'],
+                'GamesBack': team_info['gamesBack'],
+                'WinPct': float(team_info['winningPercentage']),
+                'Remaining Games': 162 - (team_info['wins'] + team_info['losses'])
+            }
+            teams.append(team)
 
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-
-        # Rename ESPN-style columns to standard names
-        if "W" in combined_df.columns and "L" in combined_df.columns:
-            combined_df.rename(columns={
-                "W": "Wins",
-                "L": "Losses",
-                "PCT": "WinPct",
-                "GB": "GamesBack"
-            }, inplace=True)
-        else:
-            print("❌ Expected columns 'W' and 'L' not found.")
-            return pd.DataFrame()
-
-        combined_df["Remaining Games"] = 162 - (combined_df["Wins"] + combined_df["Losses"])
-        return combined_df
-
-    except Exception as e:
-        print("❌ Error fetching standings:", e)
-        return pd.DataFrame()
+    df = pd.DataFrame(teams)
+    return df
 
 def main():
-    standings = fetch_espn_standings()
-
-    if standings.empty:
-        print("🚫 No standings data available.")
-        return
-
-    print("✅ Live MLB Standings Preview:")
-    print(standings[['Division', 'Team', 'Wins', 'Losses', 'Remaining Games']].head())
+    df = fetch_mlb_standings()
+    print("✅ Live MLB Standings via MLB API:")
+    print(df[['League', 'Division', 'Team', 'Wins', 'Losses', 'WinPct', 'Remaining Games']].head(12))
 
 if __name__ == "__main__":
     main()
