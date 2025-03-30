@@ -6,11 +6,19 @@ def fetch_mlb_standings():
     r = requests.get(url)
     data = r.json()
 
+    division_order = [
+        ("American League", "AL East"),
+        ("American League", "AL Central"),
+        ("American League", "AL West"),
+        ("National League", "NL East"),
+        ("National League", "NL Central"),
+        ("National League", "NL West")
+    ]
+
     teams = []
 
-    for record in data['records']:
-        league_name = record.get('league', {}).get('name', 'Unknown League')
-        division_name = record.get('division', {}).get('name', 'Unknown Division')
+    for idx, record in enumerate(data['records']):
+        league_name, division_name = division_order[idx]
 
         for team_info in record['teamRecords']:
             team_data = team_info['team']
